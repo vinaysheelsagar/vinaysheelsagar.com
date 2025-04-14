@@ -1,0 +1,7 @@
+include:
+  - ./gateway/nginx/compose.nginx.yaml
+  - ./services/frontend/compose.yaml
+
+networks:
+  nginx-net:
+    driver: overlay

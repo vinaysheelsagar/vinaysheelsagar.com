@@ -1,0 +1,14 @@
+services:
+  frontend:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./app:/app
+      - /app/node_modules
+      - /app/.vscode
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    # networks:
+    #   - nginx-net
+    
