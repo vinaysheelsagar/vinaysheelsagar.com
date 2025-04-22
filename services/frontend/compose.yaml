@@ -9,6 +9,3 @@ services:
       - /app/.vscode
     environment:
       - CHOKIDAR_USEPOLLING=true
-    # networks:
-    #   - nginx-net
-    
