@@ -1,4 +1,4 @@
-name: Release- Publish Latest Tags
+name: Tag Latest on Release
 
 on:
   release:
@@ -7,7 +7,6 @@ on:
 jobs:
   publish-latest:
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       packages: write
@@ -26,46 +25,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: Find Previous Release Tag
-        id: previous-tag
+      - name: Find all folders with VERSION
+        id: detect
         run: |
-          TAG=$(git describe --tags --abbrev=0 HEAD^ || echo "")
-          echo "::set-output name=tag::$TAG"
+          find services gateway -type f -name VERSION | while read file; do
+            DIR=$(dirname "$file")
+            NAME=$(basename "$DIR")
+            IMAGE="ghcr.io/${{ github.repository_owner }}/vinaysheelsagar.com-$NAME:latest"
 
-      - name: Detect Changed Services
-        id: changes
-        run: |
-          git fetch --tags
-
-          if [ -n "${{ steps.previous-tag.outputs.tag }}" ]; then
-            DIFF_RANGE="${{ steps.previous-tag.outputs.tag }}..HEAD"
-          else
-            DIFF_RANGE="HEAD"
-          fi
-
-          git diff --name-only $DIFF_RANGE |
-          grep -E '^services/|^gateway/' |
-          cut -d/ -f1-3 | sort -u > changed_dirs.txt
-
-          echo "Changed directories:"
-          cat changed_dirs.txt
-
-          echo "::set-output name=dirs::$(paste -sd "," changed_dirs.txt)"
-
-      - name: Build and Push Latest Docker Tags
-        if: steps.changes.outputs.dirs != ''
-        run: |
-          IFS=',' read -ra DIRS <<< "${{ steps.changes.outputs.dirs }}"
-
-          for dir in "${DIRS[@]}"; do
-            if [ -f "$dir/VERSION" ]; then
-              NAME=$(basename "$dir")
-              IMAGE="ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-$NAME:latest"
-
-              echo "🚀 Building and pushing $IMAGE"
-              docker build -t "$IMAGE" "$dir"
-              docker push "$IMAGE"
-            else
-              echo "⚠️ Skipping $dir — VERSION file not found"
-            fi
+            echo "Pushing $IMAGE"
+            docker build -t "$IMAGE" "$DIR"
+            docker push "$IMAGE"
           done

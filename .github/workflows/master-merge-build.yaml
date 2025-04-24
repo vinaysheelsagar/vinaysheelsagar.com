@@ -1,26 +1,20 @@
-name: CI- Build & Push Changed Services (Version Only)
+name: Build and Push on Main
 
 on:
   push:
     branches:
-      - master  # Run only on pushes to master
+      - master
 
 jobs:
-  build:
+  build-push:
     runs-on: ubuntu-latest
-
     permissions:
-      contents: write
+      contents: read
       packages: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -32,31 +26,31 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: Detect Changed Packages
+      - name: Detect changed service folders
         id: changes
         run: |
-          git fetch origin master --depth=2
-          git diff --name-only HEAD^ HEAD |
-          grep -E '^services/|^gateway/' |
-          cut -d/ -f1-3 | sort -u > changed_dirs.txt
+          git fetch origin main
+          git diff --name-only origin/main...HEAD |
+            grep -E '^services/[^/]+/|^gateway/[^/]+/' |
+            cut -d/ -f1-2 | sort -u > changed_dirs.txt
 
           echo "Changed directories:"
           cat changed_dirs.txt
 
-          echo "::set-output name=dirs::$(paste -sd "," changed_dirs.txt)"
+          echo "dirs=$(paste -sd "," changed_dirs.txt)" >> $GITHUB_OUTPUT
 
-      - name: Build and Push Docker Images (Version Only)
+      - name: Build and Push versioned Docker images
         if: steps.changes.outputs.dirs != ''
         run: |
           IFS=',' read -ra DIRS <<< "${{ steps.changes.outputs.dirs }}"
 
           for dir in "${DIRS[@]}"; do
             if [ -f "$dir/VERSION" ]; then
-              VERSION=$(cat "$dir/VERSION")
+              VERSION=$(cat "$dir/VERSION" | tr -d '[:space:]')
               NAME=$(basename "$dir")
-              IMAGE="ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-$NAME:$VERSION"
+              IMAGE="ghcr.io/${{ github.repository_owner }}/vinaysheelsagar.com-$NAME:$VERSION"
 
-              echo "🚀 Building and pushing $IMAGE"
+              echo "🚀 Building $IMAGE from $dir"
               docker build -t "$IMAGE" "$dir"
               docker push "$IMAGE"
             else
