@@ -1,4 +1,4 @@
-name: Build and Push on Main
+name: Build and Push on master
 
 on:
   push:
@@ -29,8 +29,8 @@ jobs:
       - name: Detect changed service folders
         id: changes
         run: |
-          git fetch origin main
-          git diff --name-only origin/main...HEAD |
+          git fetch origin master
+          git diff --name-only origin/master...HEAD |
             grep -E '^services/[^/]+/|^gateway/[^/]+/' |
             cut -d/ -f1-2 | sort -u > changed_dirs.txt
 
