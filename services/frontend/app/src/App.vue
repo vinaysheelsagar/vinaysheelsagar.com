@@ -4,7 +4,7 @@
 <template>
   <div>
     <p>Hi! I am Vinay Sheel Sagar.</p>
-    </div>
+  </div>
 </template>
 
 <style scoped>
