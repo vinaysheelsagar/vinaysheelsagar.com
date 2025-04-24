@@ -30,7 +30,7 @@ jobs:
         id: changes
         run: |
           git fetch origin master
-          git diff --name-only origin/master...HEAD |
+          git diff --name-only ${{ github.event.before }} ${{ github.sha }} |
             grep -E '^services/[^/]+/|^gateway/[^/]+/' |
             cut -d/ -f1-2 | sort -u > changed_dirs.txt
 
@@ -38,7 +38,7 @@ jobs:
           cat changed_dirs.txt
 
           echo "🔎 All changed files:"
-          git diff --name-only origin/master...HEAD
+          git diff --name-only ${{ github.event.before }} ${{ github.sha }}
 
           echo "dirs=$(paste -sd "," changed_dirs.txt)" >> $GITHUB_OUTPUT
 
