@@ -5,8 +5,6 @@
   <div>
     <p>Hi! I am Vinay Sheel Sagar.</p>
   </div>
-
-  
 </template>
 
 <style scoped>
