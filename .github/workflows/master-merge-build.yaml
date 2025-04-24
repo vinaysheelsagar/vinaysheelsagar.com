@@ -37,6 +37,9 @@ jobs:
           echo "Changed directories:"
           cat changed_dirs.txt
 
+          echo "🔎 All changed files:"
+          git diff --name-only origin/master...HEAD
+
           echo "dirs=$(paste -sd "," changed_dirs.txt)" >> $GITHUB_OUTPUT
 
       - name: Build and Push versioned Docker images
